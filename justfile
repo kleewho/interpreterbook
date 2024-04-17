@@ -9,3 +9,6 @@ run *ARGS: (build default_name)
 
 debug *ARGS:
     dlv debug main.go -- {{ARGS}}
+
+record: build
+    vhs repl.tape
