@@ -1,3 +1,3 @@
-module github.com/kleewho/interpreterbook
+module monkey
 
 go 1.22.1
