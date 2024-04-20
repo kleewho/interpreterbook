@@ -1,9 +1,12 @@
 package parser
 
 import (
+	"fmt"
 	"monkey/ast"
 	"monkey/lexer"
 	"testing"
+
+	"gotest.tools/v3/assert"
 )
 
 func TestLetStatements(t *testing.T) {
@@ -94,23 +97,53 @@ return 993322;
 
 	checkParserErrors(t, p)
 
-	if program == nil {
-		t.Fatalf("ParseProgram() returned nil")
-	}
+	assert.Check(t, program != nil, "ParseProgram() returned nil")
 
-	if len(program.Statements) != 3 {
-		t.Fatalf("program.Statements does not contain 3 statements. got=%d", len(program.Statements))
-	}
+	assert.Equal(t, 3, len(program.Statements), fmt.Sprintf("program.Statements does not contain 3 statements. got=%d", len(program.Statements)))
 
 	for _, stmt := range program.Statements {
 		returnStmt, ok := stmt.(*ast.ReturnStatement)
-		if !ok {
-			t.Errorf("stmt not *ast.ReturnStatment, got=%T", stmt)
-			continue
-		}
+		assert.Equal(t, true, ok, fmt.Sprintf("stmt not *ast.ReturnStatment, got=%T", stmt))
 
-		if returnStmt.TokenLiteral() != "return" {
-			t.Errorf("returnStmt.TokenLiterl not 'return', got %q", returnStmt.TokenLiteral())
-		}
+		assert.Equal(t, "return", returnStmt.TokenLiteral())
 	}
+}
+
+func TestIdentifierExpression(t *testing.T) {
+	input := "foobar;"
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+
+	checkParserErrors(t, p)
+
+	assert.Equal(t, 1, len(program.Statements), fmt.Sprintf("program.Statements does not have 1 statement. got=%d", len(program.Statements)))
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	assert.Equal(t, true, ok, fmt.Sprintf("stmt not *ast.ExpressionStatement, got=%T", program.Statements[0]))
+
+	ident, ok := stmt.Expression.(*ast.Identifier)
+	assert.Equal(t, true, ok, fmt.Sprintf("stmt not *ast.Identifier, got=%T", stmt.Expression))
+	assert.Equal(t, "foobar", ident.Value)
+	assert.Equal(t, "foobar", ident.TokenLiteral())
+}
+
+func TestIntegerLiteralExpression(t *testing.T) {
+	input := "5;"
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+
+	checkParserErrors(t, p)
+
+	assert.Equal(t, 1, len(program.Statements), fmt.Sprintf("program.Statements does not have 1 statement. got=%d", len(program.Statements)))
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	assert.Equal(t, true, ok, fmt.Sprintf("stmt not *ast.ExpressionStatement, got=%T", program.Statements[0]))
+
+	ident, ok := stmt.Expression.(*ast.IntegerLiteral)
+	assert.Equal(t, true, ok, fmt.Sprintf("stmt not *ast.IntegerLiteral, got=%T", stmt.Expression))
+	assert.Equal(t, int64(5), ident.Value)
+	assert.Equal(t, "5", ident.TokenLiteral())
+
 }
