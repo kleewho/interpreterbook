@@ -246,3 +246,12 @@ func TestParsingInfixExpressions(t *testing.T) {
 
 	}
 }
+
+func TestParsingInfixExpressions2(t *testing.T) {
+	input := "5 * 6 + 7"
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+	fmt.Printf("%+v\n", program)
+}
