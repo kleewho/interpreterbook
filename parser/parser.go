@@ -54,6 +54,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParserFns = make(map[token.TokenType]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
+	p.registerPrefix(token.TRUE, p.parseBoolean)
+	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 
@@ -204,44 +206,35 @@ func (p *Parser) noPrefixParseFnError(t token.TokenType) {
 }
 
 func (p *Parser) parseExpression(precedence OperationOrder) ast.Expression {
-	fmt.Printf("precedence %d\n", precedence)
 	prefix := p.prefixParserFns[p.curToken.Type]
 
-	fmt.Printf("%+v\n", p)
 	if prefix == nil {
-		println("no prefix")
 		p.noPrefixParseFnError(p.curToken.Type)
 		return nil
 	}
 
 	leftExp := prefix()
 
-	fmt.Printf("%s\n", leftExp.String())
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Type]
 
 		if infix == nil {
-			println("no infix\n")
 			return leftExp
 		}
 
 		p.nextToken()
 
-		fmt.Printf("%+v\n", p)
 		leftExp = infix(leftExp)
-		fmt.Printf("%s\n", leftExp.String())
 	}
 
 	return leftExp
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {
-	println("parseIdentifier")
 	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
-	println("parserIntegerLiteral")
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
 	if err != nil {
@@ -254,8 +247,15 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	return lit
 }
 
+func (p *Parser) parseBoolean() ast.Expression {
+	return &ast.Boolean{Token: p.curToken, Value: p.curTokenIs(token.TRUE)}
+}
+
+func (p *Parser) curTokenIs(tokenType token.TokenType) bool {
+	return p.curToken.Type == tokenType
+}
+
 func (p *Parser) parsePrefixExpression() ast.Expression {
-	println("parsePrefixExpression")
 	expression := &ast.PrefixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
@@ -275,7 +275,6 @@ func (p *Parser) skipExpressionTillSemicolon() ast.Expression {
 }
 
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
-	println("parseInfixExpression")
 	expression := &ast.InfixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
