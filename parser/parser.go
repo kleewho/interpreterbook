@@ -30,6 +30,7 @@ var precedenses = map[token.TokenType]OperationOrder{
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
+	token.LPAREN:   CALL,
 }
 
 type (
@@ -143,10 +144,15 @@ func (p *Parser) parseLetStatement() ast.Statement {
 	if !p.expectPeek(token.ASSIGN) {
 		return nil
 	}
+	p.nextToken()
 
-	expression := p.skipExpressionTillSemicolon()
+	expression := p.parseExpression(LOWEST)
 
 	letStmt.Value = expression
+
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
 
 	return &letStmt
 }
