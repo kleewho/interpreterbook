@@ -158,5 +158,5 @@ func isDigit(ch byte) bool {
 }
 
 func newToken(tokenType token.TokenType, ch byte) token.Token {
-	return token.Token{tokenType, string(ch)}
+	return token.Token{Type: tokenType, Literal: string(ch)}
 }
