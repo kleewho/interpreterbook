@@ -163,9 +163,11 @@ func (p *Parser) parseReturnStatement() ast.Statement {
 	}
 	p.nextToken()
 
-	expression := p.skipExpressionTillSemicolon()
+	returnStmt.ReturnValue = p.parseExpression(LOWEST)
 
-	returnStmt.ReturnValue = expression
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
 
 	return &returnStmt
 }
@@ -386,13 +388,6 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	}
 
 	return block
-}
-
-func (p *Parser) skipExpressionTillSemicolon() ast.Expression {
-	for p.curToken.Type != token.SEMICOLON {
-		p.nextToken()
-	}
-	return nil
 }
 
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
